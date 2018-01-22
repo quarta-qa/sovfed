@@ -21,7 +21,7 @@ class Browser(object):
         self.log = log
         self.wait = Wait(self.driver, self.timeout)
 
-    #
+    # принять alert
     def accept_alert(self):
         try:
             WebDriverWait(self.driver, 3).until(ec.alert_is_present())
@@ -29,7 +29,7 @@ class Browser(object):
         except TimeoutException:
             pass
 
-    #
+    # отклонить alert
     def decline_alert(self):
         try:
             WebDriverWait(self.driver, 3).until(ec.alert_is_present())
@@ -37,6 +37,7 @@ class Browser(object):
         except TimeoutException:
             pass
 
+    # получить текст alert
     def get_alert_text(self):
         try:
             WebDriverWait(self.driver, 3).until(ec.alert_is_present())
@@ -44,37 +45,38 @@ class Browser(object):
         except TimeoutException:
             return False
 
-    # Click по локатору(Пример: (By.XPATH, "//input[@id='documentNumber']"))
+    # клик по элементу, используя локатору(Пример: (By.XPATH, "//input[@id='documentNumber']"))
     def click(self, locator, label=None):
         self.wait.loading()
-        element = self.wait.element_appear(locator)
+        element = self.wait.element_to_be_clickable(locator)
         self.move_to_element(element)
         element.click()
         if label and self.log:
             print("[%s] [%s] нажатие на элемент" % (strftime("%H:%M:%S", localtime()), label))
 
-    # Click по тексту для кнопки или ссылки по тексту
+    # клик по элементу, используя его текст
     def click_by_text(self, text, order=1, exactly=False):
         self.wait.loading()
         if exactly:
-            locator = (By.XPATH, "(//*[self::a or self::button][normalize-space()='%s'])[%s]" % (text, order))
+            locator = (By.XPATH,
+                       "(//*[self::a or self::button or self::span][normalize-space()='%s'])[%s]" % (text, order))
         else:
             locator = (By.XPATH,
                        "(//*[self::a or self::button][contains(normalize-space(), '%s')])[%s]" % (text, order))
-        element = self.wait.element_appear(locator)
+        element = self.wait.element_to_be_clickable(locator)
         self.move_to_element(element)
         element.click()
         if text and self.log:
             print("[%s] [%s] нажатие на элемент" % (strftime("%H:%M:%S", localtime()), text))
 
-    # Click по атрибуту объекта на странице
+    # клик по элементу, используя его аттрибут value
     def click_by_value(self, value, order=1, exactly=False):
         self.wait.loading()
         if exactly:
-            locator = (By.XPATH, "(//input[@value='%s'])[%s]" % (value, order))
+            locator = (By.XPATH, "(//*[@value='%s'])[%s]" % (value, order))
         else:
-            locator = (By.XPATH, "(//input[contains(@value, '%s')])[%s]" % (value, order))
-        element = self.wait.element_appear(locator)
+            locator = (By.XPATH, "(//*[contains(@value, '%s')])[%s]" % (value, order))
+        element = self.wait.element_to_be_clickable(locator)
         self.move_to_element(element)
         element.click()
         if value and self.log:
@@ -105,7 +107,7 @@ class Browser(object):
     # Функция очистка поисковой строки если выбрано несколько фильтров
     def select2_clear(self, locator):
         self.wait.loading()
-        element = self.wait.element_appear(locator)
+        element = self.wait.element_to_be_clickable(locator)
         while True:
             try:
                 element.click()
@@ -125,7 +127,7 @@ class Browser(object):
     def set_text(self, locator, value, label=None):
         if value:
             self.wait.loading()
-            element = self.wait.element_appear(locator)
+            element = self.wait.element_to_be_clickable(locator)
             element.clear()
             element.send_keys(value)
             if label and self.log:
@@ -135,7 +137,7 @@ class Browser(object):
     def set_text_and_check(self, locator, value, label=None):
         if value:
             self.wait.loading()
-            element = self.wait.element_appear(locator)
+            element = self.wait.element_to_be_clickable(locator)
             element.clear()
             element.send_keys(value)
             self.wait.lamb(lambda x: element.get_attribute("value") == value)
@@ -148,7 +150,7 @@ class Browser(object):
             if value == "=":
                 value = Date.get_today_date()
             self.wait.loading()
-            element = self.wait.element_appear(locator)
+            element = self.wait.element_to_be_clickable(locator)
             element.clear()
             element.send_keys(value + Keys.TAB)
             if label and self.log:
@@ -156,8 +158,9 @@ class Browser(object):
 
     # Функция заполнения/снятия чек-бокса
     def set_checkbox(self, locator, value=True, label=None):
-        element = self.wait.element_appear(locator)
-        if element.is_selected() != value:
+        element = self.wait.element_to_be_clickable(locator)
+        checkbox = element.find_element_by_xpath(".//input[@type='checkbox']")
+        if checkbox.is_selected() != value:
             element.click()
             if label and self.log:
                 print("[%s] [%s] установка флага в положение \"%s\"" % (strftime("%H:%M:%S",
@@ -165,7 +168,7 @@ class Browser(object):
 
     # Функция(общая) заполнения/снятия чек-бокса по порядку элемента на страницу
     def set_checkbox_by_order(self, order=1, value=True, label=None):
-        element = self.wait.element_appear((By.XPATH, "(//input[@type='checkbox'])[%s]" % order))
+        element = self.wait.element_to_be_clickable((By.XPATH, "(//input[@type='checkbox'])[%s]" % order))
         if element.is_selected() != value:
             element.click()
             if label and self.log:
@@ -174,7 +177,7 @@ class Browser(object):
 
     # Функция заполнения/снятия радио-баттон
     def set_radio(self, locator, label=None):
-        element = self.wait.element_appear(locator)
+        element = self.wait.element_to_be_clickable(locator)
         element.click()
         if label and self.log:
             print("[%s] [%s] выбор опции" % (strftime("%H:%M:%S", localtime()), label))
@@ -183,19 +186,27 @@ class Browser(object):
     def set_select(self, locator, value, label=None):
         if value:
             self.wait.loading()
-            element = self.wait.element_appear(locator)
+            element = self.wait.element_to_be_clickable(locator)
             Select(element).select_by_visible_text(value)
+            if label and self.log:
+                print("[%s] [%s] выбор из списка значения \"%s\"" % (strftime("%H:%M:%S", localtime()), label, value))
+
+    def set_select_alt(self, locator, value, label=None):
+        if value:
+            self.wait.loading()
+            self.click(locator)
+            self.click((By.XPATH, "//a[.='%s']" % value))
             if label and self.log:
                 print("[%s] [%s] выбор из списка значения \"%s\"" % (strftime("%H:%M:%S", localtime()), label, value))
 
     # Функция выбора значения из Select2
     def set_select2(self, locator, value, label=None):
         if value:
-            self.click(locator)
-            self.set_text_and_check((By.XPATH, "//div[@id='select2-drop']//input"), value)
-            sleep(1)
-            self.click((By.XPATH, "//*[@role='option'][contains(normalize-space(), '%s')]" % value))
-            self.wait.element_disappear((By.ID, "select2-drop"))
+            element = self.wait.element_to_be_clickable(locator)
+            element.click()
+            input_field = element.find_element_by_xpath(".//input[@ng-model='$select.search']")
+            input_field.clear()
+            input_field.send_keys(value + Keys.RETURN)
             if label and self.log:
                 print("[%s] [%s] выбор из списка значения \"%s\"" % (strftime("%H:%M:%S", localtime()), label, value))
 
@@ -231,29 +242,6 @@ class Browser(object):
         element.send_keys("%s/%s" % (os.getcwd(), value))
         WebDriverWait(self.driver, 60).until(
             ec.visibility_of_element_located((By.XPATH, "//li[@class=' qq-upload-success']")))
-
-    # Функция выбор месяца
-    def select_month(self, year, month):
-        months = {
-            1: "Янв",
-            2: "Фев",
-            3: "Мар",
-            4: "Апр",
-            5: "Май",
-            6: "Июнь",
-            7: "Июль",
-            8: "Авг",
-            9: "Сен",
-            10: "Окт",
-            11: "Ноя",
-            12: "Дек"
-        }
-        self.click((By.XPATH, "//a[@class='periods__btn btn seasons dropdown-toggle ng-binding']"))
-        sleep(2)
-        if year != datetime.date.today().year:
-            self.click((By.XPATH, "//span[.='prevLabel']"))
-        self.click((By.XPATH, "//span[@class='ui-button-text'][.='%s']" % months[month]))
-        self.accept_alert()
 
     def save_screenshot(self, name, default_folder="", overwrite=True):
         """
@@ -304,6 +292,10 @@ class Wait(object):
     def element_appear(self, locator):
         return WebDriverWait(self.driver, self.timeout).until(ec.visibility_of_element_located(locator))
 
+    # Функция ожидания элемента пока по нему можно будет кликнуть
+    def element_to_be_clickable(self, locator):
+        return WebDriverWait(self.driver, self.timeout).until(ec.element_to_be_clickable(locator))
+
     # Функция ожидания пока элемент не пропадёт
     def element_disappear(self, locator):
         return WebDriverWait(self.driver, self.timeout).until(ec.invisibility_of_element_located(locator))
@@ -314,11 +306,11 @@ class Wait(object):
     # Функция ожидания окончания закгрузки - пока не пропал лоадер
     def loading(self):
         WebDriverWait(self.driver, self.timeout).until_not(
-            ec.visibility_of_element_located((By.XPATH, "//div[@class='loading-spinner']")))
+            ec.visibility_of_element_located((By.CSS_SELECTOR, ".loading")))
         WebDriverWait(self.driver, self.timeout).until_not(
-            ec.visibility_of_element_located((By.XPATH, "//div[@class='windows8']")))
+            ec.visibility_of_element_located((By.CSS_SELECTOR, ".windows8")))
         WebDriverWait(self.driver, self.timeout).until_not(
-            ec.visibility_of_element_located((By.XPATH, "//div[@class='w2ui-lock']")))
+            ec.visibility_of_element_located((By.XPATH, "//div[@id='preloader']")))
 
 
 # Работа с данными
