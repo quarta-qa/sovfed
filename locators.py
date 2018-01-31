@@ -39,3 +39,10 @@ class UsersManagementLocators(object):
     class PersonalCard(object):
         notification_management_role = (By.XPATH, "//label[@for='Roles_14__IsInRole']")
         plan_management_role = (By.XPATH, "//label[@for='Roles_7__IsInRole']")
+
+
+class TimeSheetLocators(object):
+    year = (By.XPATH, "//div[@class='dropdown year']")
+    month = (By.XPATH, "//div[@class='dropdown month']")
+    department = (By.XPATH, "//select[@id='DepartmentId']")
+    cross_field = (By.XPATH, "//td[contains(@ng-class, 'not-employed')]")

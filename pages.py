@@ -156,6 +156,10 @@ class UsersManagementPage(Browser):
 
     class PersonalCard(Browser):
 
+        @property
+        def departments(self):
+            return self.Departments(self.driver, self.timeout, self.log)
+
         def notification_management_rule(self, value):
             self.set_checkbox(UsersManagementLocators.PersonalCard.notification_management_role,
                               value,
@@ -165,3 +169,91 @@ class UsersManagementPage(Browser):
             self.set_checkbox(UsersManagementLocators.PersonalCard.plan_management_role,
                               value,
                               "Управление уведомлениями")
+
+        class Departments(Browser):
+
+            def select_department(self):
+                element = self.wait.element_appear((By.XPATH, "//tr[@class='selectedtr ng-scope']"))
+                element.click()
+                return element.text
+
+            def deselect_department(self, value):
+                element = self.wait.element_appear((By.XPATH, "//tr[contains(., '%s')]//td[@ng-click='onDepartmentUnselect(item)']" % value))
+                element.click()
+
+
+class TimeSheetPage(Browser):
+
+    @property
+    def setting(self):
+        return self.Setting(self.driver, self.timeout, self.log)
+
+    def year(self, value):
+        self.set_select_alt(TimeSheetLocators.year, value, "Выбор года")
+
+    def month(self, value):
+        self.set_select_alt(TimeSheetLocators.month, value, "Выбор месяца")
+
+    def department(self, value):
+        self.set_select(TimeSheetLocators.department, value, "Выбор подразделения")
+
+    def cross_field_click(self):
+        self.click(TimeSheetLocators.cross_field, "Клик на пересечении строки сотрудника и даты")
+
+    def select_reasons(self, employee):
+        tr = self.wait.element_appear((By.XPATH,
+                                       "//tr[@ng-repeat='user in department.users' and contains(., '%s')]" % employee))
+        field = tr.find_element_by_xpath(
+            "//td[contains(@ng-class, 'not-employed') and not(contains(@title, 'Выходные и нерабочие'))]")
+
+        for i in range(17):
+            field.click()
+            sleep(1)
+            reason = self.wait.element_appear((By.XPATH, "(//div[@class='item-highlight ng-binding'])[%s]" % (i+1)))
+            span = reason.find_element_by_xpath("span[@class='reason-missing ng-binding']").text
+            reason.click()
+            if span == "Ф" or span == "К":
+                self.driver.find_element_by_xpath("(//input[@id='work-time'])[%s]" % (i+1)).send_keys("21:00")
+            self.click_by_text("Сохранить")
+            sleep(1.5)
+            print("Сравнение вывода причины: На ячейке=%s Причина=%s" % (field.text, span))
+            if span == "Ф":
+                if field.text != "21:00":
+                    return False
+            elif field.text != span:
+                return False
+        return True
+
+    def is_there_any_option(self, employee):
+        tr = self.wait.element_appear((By.XPATH,
+                                       "//tr[@ng-repeat='user in department.users' and contains(., '%s')]" % employee))
+        field = tr.find_element_by_xpath(
+            "//td[contains(@ng-class, 'not-employed') and not(contains(@title, 'Выходные и нерабочие'))]")
+
+        field.click()
+        sleep(1)
+        try:
+            self.driver.find_element_by_xpath("//li[@ng-click='changeType(type)']")
+            return False
+        except ec.NoSuchElementException:
+            return True
+        finally:
+            self.click_by_text("Отмена")
+            sleep(1)
+
+    def is_option_exist(self, value):
+        self.click((By.XPATH, "//select[@id='DepartmentId']"))
+        return self.driver.find_element_by_xpath("//select[@id='DepartmentId']//option[contains(., '%s')]"
+                                                 % value)
+
+    class Setting(Browser):
+
+        def set_all_positions(self, value):
+            for i in range(17):
+                locator = (By.XPATH, "//label[@for='typeDays_%s']" % i)
+                self.set_checkbox(locator, value)
+            self.click_by_text("Подтвердить")
+            self.wait.text_disappear("Подтвердить")
+            save_button = self.wait.element_appear((By.XPATH, "//button[@ng-click='save()']"))
+            if save_button.is_enabled():
+                self.click_by_text("Сохранить")

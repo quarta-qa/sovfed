@@ -245,10 +245,10 @@ class Browser(object):
 
     def save_screenshot(self, name, default_folder="", overwrite=True):
         """
-        Method making screenshot of current page of driver
-        :param name: Name of file. Extension is png by default
-        :param default_folder: Folder with script by default. Important: use raw-strings if you using different one
-        :param overwrite: Overwite file if True
+        Функция для сохранения скриншота
+        :param name: Имя файла
+        :param default_folder: Дирeктория с исполняемым скриптом
+        :param overwrite: Перезаписать файл если True
         :return:
         """
         if self.driver.save_screenshot("%s%s.png" % (default_folder, name)) or overwrite:
