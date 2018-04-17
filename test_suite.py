@@ -286,3 +286,4 @@ class TestSuite:
         page.personal_card.departments.click_by_text("Сохранить")
         assert check
 #
+        # sss
