@@ -290,3 +290,6 @@ class TestSuite:
 
     def test_example(self):
         pass
+
+    def test_merge_as_new_branch(self):
+        pass
