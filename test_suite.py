@@ -287,3 +287,6 @@ class TestSuite:
         assert check
 #
         # sss s
+
+    def test_example(self):
+        pass
